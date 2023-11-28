@@ -1,4 +1,4 @@
-use image::{imageops::FilterType, DynamicImage, ImageFormat};
+use image::{imageops::FilterType, DynamicImage, ImageBuffer, ImageFormat, Rgba};
 
 fn main() {
     let template: DynamicImage = image::open("./posters_template.png").unwrap();
@@ -17,7 +17,7 @@ fn main() {
         generate_atlas(
             &template,
             &[
-                g(&p, i + 0),
+                g(&p, i),
                 g(&p, i + 1),
                 g(&p, i + 2),
                 g(&p, i + 3),
@@ -26,6 +26,10 @@ fn main() {
         )
         .save_with_format(format!("./output/posters/{i}.png"), ImageFormat::Png)
         .unwrap();
+
+        generate_tips(g(&p, i))
+            .save_with_format(format!("./output/tips/{i}.png"), ImageFormat::Png)
+            .unwrap();
     }
 }
 
@@ -33,7 +37,7 @@ fn g<'a>(input: &'a Vec<DynamicImage>, index: usize) -> &'a DynamicImage {
     input.get(index % input.len()).unwrap()
 }
 
-const OFFSETS: &[&[u32; 4]; 5] = &[
+const POSTER_OFFSETS: &[&[u32; 4]; 5] = &[
     &[0, 0, 341, 559],
     &[346, 0, 284, 559],
     &[641, 58, 274, 243],
@@ -43,9 +47,16 @@ const OFFSETS: &[&[u32; 4]; 5] = &[
 
 fn generate_atlas(template: &DynamicImage, posters: &[&DynamicImage; 5]) -> DynamicImage {
     let mut base = template.clone();
-    for (i, o) in OFFSETS.iter().enumerate() {
+    for (i, o) in POSTER_OFFSETS.iter().enumerate() {
         let p = posters[i].resize(o[2], o[3], FilterType::Lanczos3);
         image::imageops::overlay(&mut base, &p, (o[0] + o[2] - p.width()) as i64, o[1] as i64);
     }
+    base
+}
+
+fn generate_tips(poster: &DynamicImage) -> ImageBuffer<Rgba<u8>, Vec<u8>> {
+    let mut base = ImageBuffer::new(796, 1024);
+    let p = poster.resize(796, 1024, FilterType::Lanczos3);
+    image::imageops::overlay(&mut base, &p, (796 - p.width()) as i64, 0);
     base
 }
