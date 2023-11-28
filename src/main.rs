@@ -45,7 +45,7 @@ fn generate_atlas(template: &DynamicImage, posters: &[&DynamicImage; 5]) -> Dyna
     let mut base = template.clone();
     for (i, o) in OFFSETS.iter().enumerate() {
         let p = posters[i].resize(o[2], o[3], FilterType::Lanczos3);
-        image::imageops::overlay(&mut base, &p, (o[0] + p.width() - o[2]) as i64, o[1] as i64);
+        image::imageops::overlay(&mut base, &p, (o[0] + o[2] - p.width()) as i64, o[1] as i64);
     }
     base
 }
